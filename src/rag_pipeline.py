@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from src.vector_db import VectorDatabase
 from src.embeddings import EmbeddingModel
 from src.llm import LLMProvider
@@ -19,7 +19,7 @@ class RAGPipeline:
         chunks = self.document_processor.process_document(file_path)
         return self._ingest_chunks(chunks)
     
-    def ingest_text(self, text: str, metadata: Dict[str, Any] = None) -> int:
+    def ingest_text(self, text: str, metadata: Optional[Dict[str, Any]] = None) -> int:
         """Ingest raw text into the RAG system"""
         chunks = self.document_processor.process_text(text, metadata)
         return self._ingest_chunks(chunks)
@@ -41,7 +41,7 @@ class RAGPipeline:
         self.vector_db.add_documents(documents, metadatas, ids)
         return len(chunks)
     
-    def query(self, question: str, max_results: int = None) -> Dict[str, Any]:
+    def query(self, question: str, max_results: Optional[int] = None) -> Dict[str, Any]:
         """Query the RAG system"""
         if max_results is None:
             max_results = Config.MAX_RETRIEVED_DOCS

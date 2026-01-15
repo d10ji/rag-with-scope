@@ -1,7 +1,7 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 from langchain_core.documents import Document
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import os
 from config import Config
 
@@ -48,7 +48,7 @@ class DocumentProcessor:
         
         return processed_chunks
     
-    def process_text(self, text: str, metadata: Dict[str, Any] = None) -> List[Dict[str, Any]]:
+    def process_text(self, text: str, metadata: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Process raw text into chunks"""
         if metadata is None:
             metadata = {}
