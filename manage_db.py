@@ -20,20 +20,43 @@ def rebuild_vector_db():
     """Rebuild the vector database from scratch"""
     print("🗑️  Clearing existing vector database...")
     
-    # Remove the chroma database directory
-    chroma_path = Path(Config.CHROMA_DB_PATH)
-    if chroma_path.exists():
-        shutil.rmtree(chroma_path)
-        print(f"✅ Removed {chroma_path}")
+    try:
+        # Use the built-in reset functionality
+        vector_db = VectorDatabase()
+        vector_db.reset_database()
+        print("✅ Database reset using built-in functionality")
+    except Exception as e:
+        print(f"⚠️  Built-in reset failed: {e}")
+        
+        # Fallback: try to remove the database file
+        milvus_path = Path(Config.MILVUS_DB_PATH)
+        if milvus_path.exists():
+            try:
+                if milvus_path.is_file():
+                    milvus_path.unlink()
+                    print(f"✅ Removed Milvus database file: {milvus_path}")
+                elif milvus_path.is_dir():
+                    shutil.rmtree(milvus_path)
+                    print(f"✅ Removed Milvus database directory: {milvus_path}")
+            except Exception as cleanup_error:
+                print(f"⚠️  Could not remove database file: {cleanup_error}")
+    
+    # Add a small delay to ensure proper cleanup
+    import time
+    time.sleep(1)
     
     # Reinitialize the database
     print("🔄 Reinitializing vector database...")
-    vector_db = VectorDatabase()
-    info = vector_db.get_collection_info()
-    
-    print(f"✅ Vector database rebuilt successfully!")
-    print(f"📊 Collection: {info['name']}")
-    print(f"📄 Document count: {info['document_count']}")
+    try:
+        vector_db = VectorDatabase()
+        info = vector_db.get_collection_info()
+        
+        print(f"✅ Vector database rebuilt successfully!")
+        print(f"📊 Collection: {info['name']}")
+        print(f"📄 Document count: {info['document_count']}")
+    except Exception as e:
+        print(f"❌ Failed to reinitialize database: {e}")
+        raise
 
 
 def ingest_sample_data():
@@ -43,24 +66,7 @@ def ingest_sample_data():
     pipeline = RAGPipeline()
     
     # Sample documents
-    sample_texts = [
-        {
-            "text": "Artificial Intelligence (AI) is a branch of computer science that aims to create intelligent machines that can perform tasks that typically require human intelligence. Machine learning is a subset of AI that enables systems to learn and improve from experience without being explicitly programmed.",
-            "metadata": {"source": "AI Basics", "type": "educational"}
-        },
-        {
-            "text": "Natural Language Processing (NLP) is a field of AI that focuses on the interaction between computers and human language. It involves teaching computers to understand, interpret, and generate human language in a way that is valuable. Common NLP tasks include text classification, sentiment analysis, and machine translation.",
-            "metadata": {"source": "NLP Overview", "type": "educational"}
-        },
-        {
-            "text": "Vector databases are specialized databases designed to store and query high-dimensional vectors efficiently. They are essential for applications like semantic search, recommendation systems, and AI-powered search engines. Unlike traditional databases that use exact matches, vector databases use similarity search to find the most similar vectors to a given query vector.",
-            "metadata": {"source": "Vector DB Guide", "type": "technical"}
-        },
-        {
-            "text": "Retrieval-Augmented Generation (RAG) is an AI framework that combines the strengths of large language models with information retrieval. RAG systems first retrieve relevant information from a knowledge base and then use that information to generate more accurate and contextually relevant responses. This approach helps reduce hallucinations and improves the factual accuracy of AI responses.",
-            "metadata": {"source": "RAG Systems", "type": "technical"}
-        }
-    ]
+    sample_texts = [ ]
     
     total_ingested = 0
     for sample in sample_texts:

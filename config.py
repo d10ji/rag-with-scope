@@ -4,8 +4,27 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    # Vector Database
-    CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./data/chroma")
+    # Environment Detection
+    ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+    IS_PRODUCTION = ENVIRONMENT in ["production", "prod"]
+    IS_DEVELOPMENT = ENVIRONMENT in ["development", "dev", "local"]
+    
+    # Vector Database - Dynamic Configuration
+    if IS_DEVELOPMENT:
+        # Local Milvus configuration
+        MILVUS_URI = os.getenv("MILVUS_DB_PATH", "./data/milvus.db")
+        MILVUS_TOKEN = None
+        MILVUS_TYPE = "local"
+    else:
+        # Cloud Milvus configuration
+        MILVUS_URI = os.getenv("MILVUS_URI")
+        MILVUS_TOKEN = os.getenv("MILVUS_TOKEN")
+        MILVUS_TYPE = "cloud"
+        
+        # Required for production
+        if not MILVUS_URI:
+            raise ValueError("MILVUS_URI must be set in production environment")
+    
     COLLECTION_NAME = os.getenv("COLLECTION_NAME", "rag_documents")
     
     # Embedding Model

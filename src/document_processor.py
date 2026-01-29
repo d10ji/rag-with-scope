@@ -42,7 +42,9 @@ class DocumentProcessor:
                 "metadata": {
                     **chunk.metadata,
                     "source_file": file_path,
-                    "chunk_id": i
+                    "source": os.path.basename(file_path),  # Add filename as source
+                    "chunk_id": i,
+                    "total_chunks": len(chunks)  # Add total chunk count
                 }
             })
         
@@ -62,7 +64,9 @@ class DocumentProcessor:
                 "content": chunk.page_content,
                 "metadata": {
                     **chunk.metadata,
-                    "chunk_id": i
+                    "chunk_id": i,
+                    "total_chunks": len(chunks),  # Add total chunk count
+                    "source": metadata.get('source', f"Custom Text {i+1}") if metadata else f"Custom Text {i+1}"
                 }
             })
         

@@ -77,6 +77,69 @@ class RAGPipeline:
             "sources": sources
         }
     
+    def get_all_documents(self) -> List[Dict[str, Any]]:
+        """Get all documents from the RAG system, grouped by original documents"""
+        results = self.vector_db.get_all_documents()
+        documents = []
+        
+        if results['documents']:
+            for i, doc in enumerate(results['documents']):
+                metadata = results['metadatas'][i] if results['metadatas'] else {}
+                documents.append({
+                    "content": doc,
+                    "metadata": metadata,
+                    "id": results['ids'][i] if results['ids'] else f"doc_{i}"
+                })
+        
+        return documents
+    
+    def get_unique_documents(self) -> List[Dict[str, Any]]:
+        """Get unique documents (grouped by source file) from the RAG system"""
+        results = self.vector_db.get_all_documents()
+        documents_by_source = {}
+        
+        if results['documents']:
+            for i, doc in enumerate(results['documents']):
+                metadata = results['metadatas'][i] if results['metadatas'] else {}
+                
+                # Determine the source key
+                source_key = None
+                if 'source_file' in metadata:
+                    source_key = metadata['source_file']
+                elif 'source' in metadata:
+                    source_key = metadata['source']
+                else:
+                    source_key = f"Document {i}"
+                
+                # Extract filename from path if it's a path
+                if '/' in source_key or '\\' in source_key:
+                    source_key = source_key.split('/')[-1].split('\\')[-1]
+                
+                # Group by source
+                if source_key not in documents_by_source:
+                    documents_by_source[source_key] = {
+                        "source": source_key,
+                        "chunks": [],
+                        "metadata": {},
+                        "total_chunks": 0
+                    }
+                
+                documents_by_source[source_key]["chunks"].append({
+                    "content": doc,
+                    "chunk_id": metadata.get('chunk_id', 0),
+                    "id": results['ids'][i] if results['ids'] else f"doc_{i}"
+                })
+                
+                # Merge metadata (excluding chunk-specific fields)
+                for key, value in metadata.items():
+                    if key not in ['chunk_id', 'source_file'] and value:
+                        documents_by_source[source_key]["metadata"][key] = value
+                
+                documents_by_source[source_key]["total_chunks"] += 1
+        
+        # Convert to list
+        return list(documents_by_source.values())
+    
     def get_system_info(self) -> Dict[str, Any]:
         """Get information about the RAG system"""
         return {
