@@ -55,6 +55,11 @@ class VectorDatabase:
         """Delete the entire collection"""
         self.client.delete_collection(name=Config.COLLECTION_NAME)
     
+    def get_all_documents(self) -> Dict[str, Any]:
+        """Get all documents from the collection"""
+        results = self.collection.get()
+        return results
+    
     def reset_database(self):
         """Reset the entire database"""
         self.client.reset()
